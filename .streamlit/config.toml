@@ -1,0 +1,6 @@
+[server]
+headless = true
+runOnSave = true
+[browser]
+serverAddress = "localhost"
+serverPort = 8501
