@@ -1,5 +1,5 @@
 # database.py
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import IntegrityError
 import os
@@ -71,6 +71,25 @@ def verify_password(stored_hash, provided_password):
     except Exception:
         return False
 
+def fix_enum_data(session):
+    """Fix enum values in the database if they're lowercase"""
+    try:
+        # Check if we have lowercase enum values
+        result = session.execute(text("SELECT id, type FROM transactions WHERE type IN ('income', 'expense')"))
+        problematic_records = result.fetchall()
+        
+        if problematic_records:
+            print(f"Found {len(problematic_records)} records with lowercase enum values. Fixing...")
+            
+            # Update to uppercase
+            session.execute(text("UPDATE transactions SET type = 'INCOME' WHERE type = 'income'"))
+            session.execute(text("UPDATE transactions SET type = 'EXPENSE' WHERE type = 'expense'"))
+            session.commit()
+            print("Database enum values fixed!")
+    except Exception as e:
+        print(f"Error fixing enum data: {e}")
+        session.rollback()
+
 # --- Database Initialization Function ---
 def init_db():
     """
@@ -87,6 +106,9 @@ def init_db():
     session = db_session()
 
     try:
+        # Fix any existing enum data issues first
+        fix_enum_data(session)
+
         # --- 1. Create Default Accounts ---
         usd_account = session.query(Account).filter_by(currency_code='USD').first()
         inr_account = session.query(Account).filter_by(currency_code='INR').first()

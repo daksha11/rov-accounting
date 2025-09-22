@@ -14,8 +14,8 @@ Base = declarative_base()
 
 # --- Enum for Transaction Types ---
 class TransactionType(enum.Enum):
-    INCOME = "income"
-    EXPENSE = "expense"
+    INCOME = "INCOME"  # Changed to uppercase
+    EXPENSE = "EXPENSE"  # Changed to uppercase
 
 # --- Database Models ---
 
@@ -51,7 +51,7 @@ class Account(Base):
         total = 0.0
         for transaction in self.transactions:
             if not transaction.is_void:
-                if transaction.type == TransactionType.INCOME.value:
+                if transaction.type == TransactionType.INCOME:
                     total += transaction.amount
                 else: # EXPENSE
                     total -= transaction.amount
